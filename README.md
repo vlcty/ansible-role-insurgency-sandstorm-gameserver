@@ -107,4 +107,4 @@ My first approach was to call the binary directly in the `ExecStart` key in the 
 
 Read this google document: https://docs.google.com/document/d/1GDLg5p9jjeIya7EgBk0ibzDtDlyQ-U_jpspOzby-JmM/edit
 
-or my blogpost: https://blog.veloc1ty.de/2018/12/00/starting-a-dedicated-insurgency-sandstorm-server-on-linux/
+or my blogpost: https://blog.veloc1ty.de/2018/12/09/starting-a-dedicated-insurgency-sandstorm-server-on-linux/
