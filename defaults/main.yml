@@ -1,0 +1,14 @@
+---
+# UNXI users and group running the gameserver files
+sandstorm_user: sandstorm
+sandstorm_group: sandstorm
+sandstorm_home: /home/sandstorm
+
+# Should I create a systemd service
+sandstorm_create_systemd_services: true
+
+# Internals (Please don't change)
+sandstorm_app_id: 581330v # The steam app id for the sandstorm server files
+sandstorm_install_timeout_minutes: 10 # Timeout for installing gameservers
+sandstorm_ini_path: Insurgency/Saved/Config/LinuxServer # Relative path for ini files
+sandstorm_txt_path: Insurgency/Config/Server # Relative path for txt files

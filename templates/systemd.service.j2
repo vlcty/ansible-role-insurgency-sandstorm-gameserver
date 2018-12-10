@@ -1,0 +1,18 @@
+#
+# Managed by ansible
+# Role: sandstorm
+#
+[Unit]
+Description=Insurgency Sandstorm gameserver {{ item.key }}
+After=network.target network-online.target
+
+[Service]
+User={{ sandstorm_user }}
+Group={{ sandstorm_group }}
+WorkingDirectory={{ sandstorm_home }}/gameservers/{{ item.key }}
+ExecStart="{{ sandstorm_home }}/gameservers/{{ item.key }}/startscript.sh"
+TimeoutStartSec=infinity
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: Josef 'veloc1ty' Stautner
+  description: Installs and manages Insurgency Sandstorm gameservers
+  company: none
+  license: GNU GPL v3
+  min_ansible_version: 2.6
+  platforms:
+  - name: Archlinux
+    versions:
+    - all
+  categories:
+  - insurgency
+  - gameserver
+dependencies: []

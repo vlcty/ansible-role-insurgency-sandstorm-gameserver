@@ -1,0 +1,146 @@
+---
+- name: Assert needed variables
+  assert:
+      that:
+          - sandstorm_user is defined
+          - sandstorm_group is defined
+          - sandstorm_home is defined
+          - sandstorm_create_systemd_services is defined
+          - sandstorm_app_id is defined
+          - sandstorm_install_timeout_minutes is defined
+
+- name: Create UNIX group
+  group:
+      name: "{{ sandstorm_group }}"
+      state: present
+
+- name: Create UNIX users
+  user:
+      name: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      home: "{{ sandstorm_home }}"
+      create_home: true
+      state: present
+
+- name: Download steamcmd
+  get_url:
+      url: https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+      dest: "{{ sandstorm_home }}/steamcmd_linux.tar.gz"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+  register: steamcmdinstall
+
+- name: Unarchive steamcmd
+  unarchive:
+      src: "{{ sandstorm_home }}/steamcmd_linux.tar.gz"
+      dest: "{{ sandstorm_home }}"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      remote_src: yes
+  when: steamcmdinstall.changed == true
+
+- name: Set correct rights on linux32
+  file:
+      path: "{{ sandstorm_home }}/linux32"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+
+- name: Add setuid bit to steamcmd
+  file:
+      path: "{{ sandstorm_home }}/linux32/steamcmd"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      mode: 4755
+
+- name: Create gameserver directories
+  file:
+      path: "{{ sandstorm_home }}/gameservers/{{ item.key }}"
+      state: directory
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+  with_dict: "{{ sandstorm_servers }}"
+
+- name: Install sandstorm game servers (take some times)
+  shell: "timeout {{ sandstorm_install_timeout_minutes}}m ./steamcmd.sh +force_install_dir gameservers/{{ item.key }} +login anonymous +app_update {{ sandstorm_app_id }} validate +quit"
+  args:
+    executable: /bin/bash
+    chdir: "{{ sandstorm_home }}"
+  with_dict: "{{ sandstorm_servers }}"
+  register: installmessages
+  changed_when: false
+
+- debug:
+    var: installmessages
+
+- name: Create folders for ini files
+  file:
+      path: "{{ sandstorm_home }}/gameservers/{{ item.key }}/{{ sandstorm_ini_path }}"
+      state: directory
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+  with_dict: "{{ sandstorm_servers }}"
+
+- name: Create folders for txt files
+  file:
+      path: "{{ sandstorm_home }}/gameservers/{{ item.key }}/{{ sandstorm_txt_path }}"
+      state: directory
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+  with_dict: "{{ sandstorm_servers }}"
+
+- name: Create startscripts
+  template:
+      src: startscript.sh.j2
+      dest: "{{ sandstorm_home }}/gameservers/{{ item.key }}/startscript.sh"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      mode: 0740
+  with_dict: "{{ sandstorm_servers }}"
+
+- name: Create Admins.txt files
+  template:
+      src: admins.txt.j2
+      dest: "{{ sandstorm_home }}/gameservers/{{ item.key }}/{{ sandstorm_txt_path }}/Admins.txt"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      mode: 0740
+  when: item.value.sandstorm_admins is defined
+  with_dict: "{{ sandstorm_servers }}"
+
+- name: Create MapCycle.txt files
+  template:
+      src: mapcycle.txt.j2
+      dest: "{{ sandstorm_home }}/gameservers/{{ item.key }}/{{ sandstorm_txt_path }}/MapCycle.txt"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      mode: 0740
+  when: item.value.sandstorm_mapcycle is defined
+  with_dict: "{{ sandstorm_servers }}"
+
+- name: Create Game.ini files
+  copy:
+      content: "{{ item.value.sandstorm_config }}"
+      dest: "{{ sandstorm_home }}/gameservers/{{ item.key }}/{{ sandstorm_ini_path }}/Game.ini"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      mode: 0740
+  with_dict: "{{ sandstorm_servers }}"
+
+- block:
+    - name: Create systemd service files
+      template:
+          src: systemd.service.j2
+          dest: "/etc/systemd/system/sandstorm-{{ item.key }}.service"
+          owner: root
+          group: root
+      with_dict: "{{ sandstorm_servers }}"
+
+    - name: Start all gameservers
+      systemd:
+          name: "sandstorm-{{ item.key }}.service"
+          state: started
+          enabled: true
+          daemon_reload: true
+      with_dict: "{{ sandstorm_servers }}"
+
+  when: sandstorm_create_systemd_services == true

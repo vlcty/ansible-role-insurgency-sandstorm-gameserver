@@ -1,0 +1,3 @@
+#!/bin/bash
+cd {{ sandstorm_home }}/gameservers/{{ item.key }}
+Insurgency/Binaries/Linux/InsurgencyServer-Linux-Shipping "{{ item.value.sandstorm_server_start_map }}?Scenario={{ item.value.sandstorm_start_scenario }}" -log -hostname="{{ item.value.sandstorm_servername }}" -QueryPort={{ item.value.sandstorm_port}}
