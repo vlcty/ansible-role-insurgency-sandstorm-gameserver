@@ -8,6 +8,7 @@
           - sandstorm_create_systemd_services is defined
           - sandstorm_app_id is defined
           - sandstorm_install_timeout_minutes is defined
+          - sandstorm_create_systemd_timer is defined
 
 - name: Create UNIX group
   group:
@@ -107,6 +108,16 @@
   when: item.value.sandstorm_admins is defined
   with_dict: "{{ sandstorm_servers }}"
 
+- name: Create Bans.json files
+  template:
+      src: bans.json.j2
+      dest: "{{ sandstorm_home }}/gameservers/{{ item.key }}/{{ sandstorm_txt_path }}/Bans.json"
+      owner: "{{ sandstorm_user }}"
+      group: "{{ sandstorm_group }}"
+      mode: 0740
+  when: item.value.sandstorm_bans is defined
+  with_dict: "{{ sandstorm_servers }}"
+
 - name: Create MapCycle.txt files
   template:
       src: mapcycle.txt.j2
@@ -144,3 +155,30 @@
       with_dict: "{{ sandstorm_servers }}"
 
   when: sandstorm_create_systemd_services == true
+
+- block:
+
+    - name: Create systemd restart timers
+      template:
+          src: sandstorm-timer.timer.j2
+          dest: "/etc/systemd/system/sandstorm-restart-{{ item.key }}.timer"
+          owner: root
+          group: root
+      with_dict: "{{ sandstorm_servers }}"
+
+    - name: Create systemd restart timers services
+      template:
+          src: sandstorm-restart.service.j2
+          dest: "/etc/systemd/system/sandstorm-restart-{{ item.key }}.service"
+          owner: root
+          group: root
+      with_dict: "{{ sandstorm_servers }}"
+
+    - name: Start and enable the timers
+      systemd:
+          name: "sandstorm-restart-{{ item.key }}.timer"
+          state: started
+          enabled: true
+      with_dict: "{{ sandstorm_servers }}"
+
+  when: sandstorm_create_systemd_timer == true

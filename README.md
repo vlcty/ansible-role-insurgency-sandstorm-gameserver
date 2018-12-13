@@ -21,6 +21,8 @@ sandstorm_servers:
         sandstorm_port: 27333 # mandatory
         sandstorm_admins: # optional
             - 76561198003172459 # veloc1ty
+        sandstorm_bans: # optional
+            - 76561197987793486
         sandstorm_mapcycle: # optional
             - Scenario_Crossing_Checkpoint_Security
             - Scenario_Hideout_Checkpoint_Security

@@ -1,0 +1,13 @@
+#
+# Managed by ansible
+# Role: sandstorm
+#
+[Unit]
+Description=Timer to restart sandstorm server {{ item.key }}
+
+[Timer]
+OnCalendar=*-*-* 4:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

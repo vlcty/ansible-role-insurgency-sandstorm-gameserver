@@ -1,0 +1,12 @@
+#
+# Managed by ansible
+# Role: sandstorm
+#
+[Unit]
+Description=Restart sandstorm server {{ item.key }}
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl restart sandstorm-{{ item.key }}
+User=root
+Group=root
