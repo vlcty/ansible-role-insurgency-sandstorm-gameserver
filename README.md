@@ -91,6 +91,20 @@ You can also do this with ansible:
      update_cache: true
 ```
 
+On Ubuntu you need to enable the i386 architecture and install the `lib32gcc1` package.
+In your playbook add this:
+
+```
+- name: Enable i386 arch
+  command: dpkg --add-architecture i386
+  
+- name: 32bit steamcmd support
+  apt:
+    name: lib32gcc1
+    state: present
+    update_cache: true
+```
+
 ## Supported distributions
 
 I've developed this role against Archlinux. All other distributions should also work.
